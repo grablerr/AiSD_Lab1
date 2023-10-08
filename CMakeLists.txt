@@ -15,10 +15,10 @@ if(MSVC)
 endif()
 
 add_library(Vector STATIC "include/Vector/Vector.cpp")
-add_library(Polynomials STATIC "include/Polynomial/Polynomial.cpp")
+add_library(Polynomial STATIC "include/Polynomial/Polynomial.cpp")
 target_include_directories(Vector PUBLIC "include/Vector")
-target_include_directories(Polynomials PUBLIC "include/Polynomial")
+target_include_directories(Polynomial PUBLIC "include/Polynomial")
 
 add_executable (${PROJECT_NAME} "main.cpp")
-target_link_libraries(Polynomials PUBLIC Vector)
+target_link_libraries(Polynomial PUBLIC Vector)
 target_link_libraries(${PROJECT_NAME} Polynomial)
