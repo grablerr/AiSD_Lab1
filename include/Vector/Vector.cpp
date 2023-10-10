@@ -26,16 +26,6 @@ namespace polynomials {
 		~Vector();
 		T& operator[](int num);
 		T operator[](int num) const;
-		friend std::ostream& operator<<(std::ostream& os, const Vector<T>& vector) {
-			for (int i = 0; i < vector._size; ++i) {
-				if (i == vector.get_size()) {
-					os << vector._ptr[i] << "x^" << i;
-						return os;
-				}
-				os << vector._ptr[i]<<"x^"<<i<<"+";
-			}
-			return os;
-		}
 	};
 
 	template <typename T>
@@ -169,6 +159,6 @@ namespace polynomials {
 		this->Swap(other_copy);
 		return *this;
 	}
-
+	
 }
 #endif 

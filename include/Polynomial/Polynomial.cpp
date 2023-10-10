@@ -4,6 +4,7 @@
 #include <Vector.cpp>
 #include <stdexcept>
 #include <cmath>
+#include <complex>
 #include <iostream>
 using namespace std;
 
@@ -11,9 +12,8 @@ namespace polynomials {
 
 	template<typename T>
 	class Polynomial {
-		Vector<T> _coeffs;
+		Vector<T> _coefficients;
 	public:
-
 		Polynomial();
 		Polynomial(int max_level);
 		Polynomial(const Vector<T>& other);
@@ -22,71 +22,90 @@ namespace polynomials {
 		T compute(T argument);
 		Polynomial<T> operator+=(const Polynomial<T>& other);
 		Polynomial<T> operator+(const Polynomial<T>& other)const;
-		Polynomial<T> operator-=(const Polynomial<T>& other);
+		Polynomial<T> operator -= (const Polynomial<T>& other);
 		Polynomial<T> operator-(const Polynomial<T>& other)const;
 		Polynomial<T> operator*(const T num) const;
-		Polynomial<T> operator[](int level) const;
+		T& operator[](int level);
+		T operator[](int level) const;
 		bool operator==(Polynomial<T>& other) const;
 		bool operator!=(Polynomial<T>& other) const;
 		Polynomial<T> shrink_to_fit();
-		Polynomial<T> expand(int level);
+		Polynomial<T>& operator=(Polynomial<T> other);
+		Polynomial<T>& expand(int level);
 		~Polynomial() = default;
+		const T coeff_at(int index) const;
+		friend std::ostream& operator<<(std::ostream& out, const Polynomial<T>& poly) {
+			int degree = poly._coefficients.get_size() - 1;
+
+			for (int i = degree; i >= 0; --i) {
+				T coeff = poly.coeff_at(i);
+				if (i < degree) {
+					out << " + ";
+				}
+				if (i > 0) {
+					out << coeff << "x^" << i;
+				}
+				else {
+					out << coeff;
+				}
+			}
+			return out;
+		}
 	};
 
 	template<typename T>
 	Polynomial<T>::Polynomial() {
-		this->_coeffs = Vector<T>();
+		this->_coefficients = Vector<T>();
 	}
 
 	template<typename T>
 	Polynomial<T>::Polynomial(int max_level) {
-		this->_coeffs = Vector<T>(max_level);
+		this->_coefficients = Vector<T>(max_level);
 	}
 
 	template<typename T>
 	Polynomial<T>::Polynomial(const Vector<T>& other) {
-		_coeffs = other;
+		_coefficients = other;
 	}
 
 	template<typename T>
-	Vector<T>& Polynomial<T>::get_coeffs()
-	{
-		return _coeffs;
+	Vector<T>& Polynomial<T>::get_coeffs() {
+		return _coefficients;
 	}
 
 	template<typename T>
 	Polynomial<T> Polynomial<T>::set(T coeff, int level) {
-		if (level < 0 || level > _coeffs.get_size()) { throw runtime_error("Invalid level"); }
+		if (level < 0 || level > _coefficients.get_size()) { throw runtime_error("Invalid level"); }
 		if (coeff == 0) { return *this; }
-		_coeffs[level] = coeff;
+		_coefficients[level] = coeff;
 		return *this;
 	}
 
 	template<typename T>
 	T Polynomial<T>::compute(T arg) {
-		T sum;
-		for (int i = 0; i < _coeffs.get_size(); ++i) {
-			sum += _coeffs[i] * pow(arg, i);
+		T sum = 0;
+		for (int i = 0; i < _coefficients.get_size(); ++i) {
+			sum += static_cast<T>(_coefficients[i]) * static_cast<T>(pow(arg, i));
 		}
 		return sum;
 	}
 
 	template<typename T>
 	Polynomial<T> Polynomial<T>::operator+=(const Polynomial<T>& other) {
-		_coeffs += other._coeffs;
+		_coefficients += other._coefficients;
 		return *this;
 	}
 
 	template<typename T>
 	Polynomial<T> Polynomial<T>::operator+(const Polynomial<T>& other) const {
-		int maxSize = std::max(_coeffs.get_size(), other._coeffs.get_size());
+		int maxSize = std::max(_coefficients.get_size(), other._coefficients.get_size());
 		Polynomial<T> result(maxSize);
 
 		for (int i = 0; i < maxSize; ++i) {
-			T coeff1 = (i < _coeffs.get_size()) ? _coeffs[i] : 0;
-			T coeff2 = (i < other._coeffs.get_size()) ? other._coeffs[i] : 0;
+			T coeff1 = (i < _coefficients.get_size()) ? _coefficients[i] : 0;
+			T coeff2 = (i < other._coefficients.get_size()) ? other._coefficients[i] : 0;
 
-			result._coeffs[i] = coeff1 + coeff2;
+			result._coefficients[i] = coeff1 + coeff2;
 		}
 
 		return result;
@@ -94,20 +113,20 @@ namespace polynomials {
 
 	template<typename T>
 	Polynomial<T> Polynomial<T>::operator-=(const Polynomial<T>& other) {
-		_coeffs -= other._coeffs;
+		_coefficients -= other._coefficients;
 		return *this;
 	}
 
 	template<typename T>
 	Polynomial<T> Polynomial<T>::operator-(const Polynomial<T>& other) const {
-		int maxSize = std::max(_coeffs.get_size(), other._coeffs.get_size());
+		int maxSize = std::max(_coefficients.get_size(), other._coefficients.get_size());
 		Polynomial<T> result(maxSize);
 
 		for (int i = 0; i < maxSize; ++i) {
-			T coeff1 = (i < _coeffs.get_size()) ? _coeffs[i] : 0;
-			T coeff2 = (i < other._coeffs.get_size()) ? other._coeffs[i] : 0;
+			T coeff1 = (i < _coefficients.get_size()) ? _coefficients[i] : 0;
+			T coeff2 = (i < other._coefficients.get_size()) ? other._coefficients[i] : 0;
 
-			result._coeffs[i] = coeff1 - coeff2;
+			result._coefficients[i] = coeff1 - coeff2;
 		}
 
 		return result;
@@ -115,61 +134,141 @@ namespace polynomials {
 
 	template<typename T>
 	Polynomial<T> Polynomial<T>::operator*(T skal) const {
-		int maxSize = std::max(_coeffs.get_size(), _coeffs.get_size());
+		int maxSize = std::max(_coefficients.get_size(), _coefficients.get_size());
 		Polynomial<T> result(maxSize);
 
 		for (int i = 0; i < maxSize; ++i) {
-			T coeff1 = (i < _coeffs.get_size()) ? _coeffs[i] : 0;
+			T coeff1 = (i < _coefficients.get_size()) ? _coefficients[i] : 0;
 
-			result._coeffs[i] = coeff1 * skal;
+			result._coefficients[i] = coeff1 * skal;
 		}
 
 		return result;
 	}
 
 	template<typename T>
-	Polynomial<T> Polynomial<T>::operator[](int level) const {
-		if (level < 0 || level >= _coeffs.get_size()) {
+	T& Polynomial<T>::operator[](int level) {
+		if (level < 0 || level >= _coefficients.get_size()) {
 			throw runtime_error("Invalid level");
 		}
-		return _coeffs[level];
+		return _coefficients[level];
+	}
+
+	template<typename T>
+	T Polynomial<T>::operator[](int level) const {
+		if (level < 0 || level >= _coefficients.get_size()) {
+			throw runtime_error("Invalid level");
+		}
+		return _coefficients[level];
 	}
 
 	template<typename T>
 	bool Polynomial<T>::operator==(Polynomial<T>& other) const {
-		return (this->_coeffs == other._coeffs);
+		return (this->_coefficients == other._coefficients);
 	}
 
 	template<typename T>
 	bool Polynomial<T>::operator!=(Polynomial<T>& other) const {
-		return (this->_coeffs != other._coeffs);
+		return (this->_coefficients != other._coefficients);
 	}
 
 	template<typename T>
 	Polynomial<T> Polynomial<T>::shrink_to_fit() {
-		int newSize = _coeffs.get_size();
+		int newSize = _coefficients.get_size();
 
-		while (newSize > 0 && _coeffs[newSize - 1] == T(0)) {
+		while (newSize > 0 && _coefficients[newSize - 1] == T(0)) {
 			newSize--;
 		}
 
 		Polynomial<T> result(newSize);
 
 		for (int i = 0; i < newSize; i++) {
-			result._coeffs[i] = _coeffs[i];
+			result._coefficients[i] = _coefficients[i];
 		}
-		_coeffs = result._coeffs;
+		_coefficients = result._coefficients;
 		return *this;
 	}
 
 	template<typename T>
-	Polynomial<T> Polynomial<T>::expand(int level) {
-		Polynomial<T> temp(level);
-		for (int i = 0; i <= temp._coeffs.get_size(); ++i) {
-			temp[i] = _coeffs[i];
-		}
-		_coeffs = temp;
+	const T Polynomial<T>::coeff_at(int index) const {
+		return _coefficients[index];
+	}
+
+	template<typename T>
+	Polynomial<T>& Polynomial<T>::operator=(Polynomial<T> other) {
+		std::swap(_coefficients, other._coefficients);
 		return *this;
 	}
+
+	template<typename T>
+	Polynomial<T>& Polynomial<T>::expand(int level) {
+		Polynomial<T> temp(level);
+		for (int i = 0; i < _coefficients.get_size(); ++i) {
+			temp[i] = _coefficients[i];
+		}
+		_coefficients = temp.get_coeffs();
+		return *this;
+	}
+
+	template <std::complex<float>>
+	std::ostream& operator<<(std::ostream& out, const Polynomial<std::complex<float>>& poly) {
+		int degree = poly._coefficients.get_size() - 1;
+
+		for (int i = degree; i >= 0; --i) {
+			std::complex<float> coeff = poly.coeff_at(i);
+			if (coeff != std::complex<float>(0.0f, 0.0f)) {
+				if (i < degree) {
+					out << " + ";
+				}
+				if (i > 0) {
+					out << "(" << coeff.real();
+					if (coeff.imag() >= 0) {
+						out << "+";
+					}
+					out << coeff.imag() << "i)";
+					out << "x^" << i;
+				}
+				else {
+					out << "(" << coeff.real();
+					if (coeff.imag() >= 0) {
+						out << "+";
+					}
+					out << coeff.imag() << "i)";
+				}
+			}
+		}
+		return out;
+	}
+
+	template <std::complex<double>>
+	std::ostream& operator<<(std::ostream& out, const Polynomial<std::complex<double>>& poly) {
+		int degree = poly._coefficients.get_size() - 1;
+
+		for (int i = degree; i >= 0; --i) {
+			std::complex<double> coeff = poly.coeff_at(i);
+			if (coeff != std::complex<double>(0.0, 0.0)) {
+				if (i < degree) {
+					out << " + ";
+				}
+				if (i > 0) {
+					out << "(" << coeff.real();
+					if (coeff.imag() >= 0) {
+						out << "+";
+					}
+					out << coeff.imag() << "i)";
+					out << "x^" << i;
+				}
+				else {
+					out << "(" << coeff.real();
+					if (coeff.imag() >= 0) {
+						out << "+";
+					}
+					out << coeff.imag() << "i)";
+				}
+			}
+		}
+		return out;
+	}
+
 }
 #endif
