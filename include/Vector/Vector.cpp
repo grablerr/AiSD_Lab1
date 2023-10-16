@@ -15,14 +15,17 @@ namespace polynomials {
 		Vector();
 		Vector(int size);
 		Vector(const Vector<T>& other);
+
 		int get_size()const;
 		T* get_ptr();
+
 		Vector<T>& operator=(const Vector<T>& other);
 		void Swap(Vector<T>& other);
 		bool operator==(const Vector<T>& other) const;
 		bool operator!=(const Vector<T>& other) const;
 		Vector& operator+=(const Vector<T>& other);
 		Vector& operator-=(const Vector<T>& other);
+
 		~Vector();
 		T& operator[](int num);
 		T operator[](int num) const;
@@ -123,7 +126,7 @@ namespace polynomials {
 
 	template <typename T>
 	T& Vector<T>::operator[](int num) {
-		if (num < 0 || num >= this->_size) {
+		if (num < 0 || num >= (this->_size)) {
 			throw std::out_of_range("Index out of range");
 		}
 		return this->_ptr[num];
@@ -131,7 +134,7 @@ namespace polynomials {
 
 	template <typename T>
 	T Vector<T>::operator[](int num) const {
-		if (num < 0 || num >= this->_size) {
+		if (num < 0 || num >= (this->_size)) {
 			throw std::out_of_range("Index out of range");
 		}
 		return this->_ptr[num];
@@ -140,8 +143,8 @@ namespace polynomials {
 
 	template <typename T>
 	void Vector<T>::Swap(Vector<T>& other) {
-		std::swap(this->_ptr, other._ptr);
 		std::swap(this->_size, other._size);
+		std::swap(this->_ptr, other._ptr);
 	}
 
 	template <typename T>

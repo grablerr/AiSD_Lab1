@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <complex>
+#include <utility>
 #include <iostream>
 using namespace std;
 
@@ -17,9 +18,11 @@ namespace polynomials {
 		Polynomial();
 		Polynomial(int max_level);
 		Polynomial(const Vector<T>& other);
+
 		Vector<T>& get_coeffs();
 		Polynomial<T> set(T coeff, int level);
 		T compute(T argument);
+
 		Polynomial<T> operator+=(const Polynomial<T>& other);
 		Polynomial<T> operator+(const Polynomial<T>& other)const;
 		Polynomial<T> operator -= (const Polynomial<T>& other);
@@ -29,6 +32,7 @@ namespace polynomials {
 		T operator[](int level) const;
 		bool operator==(Polynomial<T>& other) const;
 		bool operator!=(Polynomial<T>& other) const;
+
 		Polynomial<T> shrink_to_fit();
 		Polynomial<T>& operator=(Polynomial<T> other);
 		Polynomial<T>& expand(int level);
@@ -50,7 +54,7 @@ namespace polynomials {
 				}
 			}
 			return out;
-		}
+		};
 	};
 
 	template<typename T>
@@ -75,8 +79,12 @@ namespace polynomials {
 
 	template<typename T>
 	Polynomial<T> Polynomial<T>::set(T coeff, int level) {
-		if (level < 0 || level > _coefficients.get_size()) { throw runtime_error("Invalid level"); }
-		if (coeff == 0) { return *this; }
+		if (level < 0) { throw runtime_error("Invalid level"); }
+		if (level > _coefficients.get_size()) {
+			expand(level);
+			_coefficients[level - 1] = coeff;
+			return *this;
+		}
 		_coefficients[level] = coeff;
 		return *this;
 	}
@@ -153,7 +161,6 @@ namespace polynomials {
 		}
 		return _coefficients[level];
 	}
-
 	template<typename T>
 	T Polynomial<T>::operator[](int level) const {
 		if (level < 0 || level >= _coefficients.get_size()) {
@@ -210,65 +217,68 @@ namespace polynomials {
 		return *this;
 	}
 
-	template <std::complex<float>>
-	std::ostream& operator<<(std::ostream& out, const Polynomial<std::complex<float>>& poly) {
-		int degree = poly._coefficients.get_size() - 1;
-
-		for (int i = degree; i >= 0; --i) {
-			std::complex<float> coeff = poly.coeff_at(i);
-			if (coeff != std::complex<float>(0.0f, 0.0f)) {
-				if (i < degree) {
-					out << " + ";
-				}
-				if (i > 0) {
-					out << "(" << coeff.real();
-					if (coeff.imag() >= 0) {
-						out << "+";
-					}
-					out << coeff.imag() << "i)";
-					out << "x^" << i;
-				}
-				else {
-					out << "(" << coeff.real();
-					if (coeff.imag() >= 0) {
-						out << "+";
-					}
-					out << coeff.imag() << "i)";
-				}
-			}
+	template<typename T>
+	std::pair<T, T> root_search(Polynomial<T> poly) {
+		if (poly.get_coeffs().get_size() < 3) {
+			throw std::runtime_error("Polynomial must be of degree 2");
 		}
-		return out;
+
+		T c = poly[0];
+		T b = poly[1];
+		T a = poly[2];
+
+		T discriminant = b * b - 4 * a * c;
+
+		if (discriminant < 0 && (!std::is_same<T, std::complex<float>>::value || !std::is_same<T, std::complex<double>>::value)) {
+			throw std::runtime_error("No real roots for non-complex data type");
+		}
+
+		T root1 = (-b + sqrt(discriminant)) / (2 * a);
+		T root2 = (-b - sqrt(discriminant)) / (2 * a);
+
+		return std::make_pair(root1, root2);
 	}
 
-	template <std::complex<double>>
-	std::ostream& operator<<(std::ostream& out, const Polynomial<std::complex<double>>& poly) {
-		int degree = poly._coefficients.get_size() - 1;
-
-		for (int i = degree; i >= 0; --i) {
-			std::complex<double> coeff = poly.coeff_at(i);
-			if (coeff != std::complex<double>(0.0, 0.0)) {
-				if (i < degree) {
-					out << " + ";
-				}
-				if (i > 0) {
-					out << "(" << coeff.real();
-					if (coeff.imag() >= 0) {
-						out << "+";
-					}
-					out << coeff.imag() << "i)";
-					out << "x^" << i;
-				}
-				else {
-					out << "(" << coeff.real();
-					if (coeff.imag() >= 0) {
-						out << "+";
-					}
-					out << coeff.imag() << "i)";
-				}
-			}
+	template<>
+	std::pair<std::complex<float>, std::complex<float>> root_search(Polynomial<std::complex<float> > poly) {
+		if (poly.get_coeffs().get_size() < 3) {
+			throw runtime_error("Polynomial must be of degree 2");
 		}
-		return out;
+
+		complex<float> c = poly[0];
+		complex<float> b = poly[1];
+		complex<float> a = poly[2];
+
+		complex<float> discriminant = b * b - 4.0f * a * c;
+
+		complex<float> root1 = (-b + sqrt(discriminant)) / (2.0f * a);
+		complex<float> root2 = (-b - sqrt(discriminant)) / (2.0f * a);
+
+		return std::make_pair(root1, root2);
 	}
 
+	template<>
+	std::pair<std::complex<double>, std::complex<double>> root_search(Polynomial<std::complex<double> > poly) {
+		if (poly.get_coeffs().get_size() < 3) {
+			throw runtime_error("Polynomial must be of degree 2");
+		}
+
+		complex<double> c = poly[0];
+		complex<double> b = poly[1];
+		complex<double> a = poly[2];
+
+		complex<double> discriminant = b * b - 4.0 * a * c;
+
+		complex<double> root1 = (-b + sqrt(discriminant)) / (2.0 * a);
+		complex<double> root2 = (-b - sqrt(discriminant)) / (2.0 * a);
+
+		return std::make_pair(root1, root2);
+	}
+
+	template <typename T1, typename T2>
+	std::ostream& operator<<(std::ostream& os, const std::pair<T1, T2>& p) {
+		os << "(" << p.first << ", " << p.second << ")";
+		return os;
+	}
 }
 #endif
