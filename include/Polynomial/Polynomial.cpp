@@ -155,6 +155,20 @@ namespace polynomials {
 	}
 
 	template<typename T>
+	Polynomial<T> operator*(const T num, Polynomial<T>& poly) {
+		int maxSize = poly.get_coeffs().get_size();
+		Polynomial<T> result(maxSize);
+
+		for (int i = 0; i < maxSize; ++i) {
+			T coeff1 = (i < poly.get_coeffs().get_size()) ? poly.get_coeffs()[i] : 0;
+
+			result.get_coeffs()[i] = coeff1 * num;
+		}
+
+		return result;
+	}
+
+	template<typename T>
 	T& Polynomial<T>::operator[](int level) {
 		if (level < 0 || level >= _coefficients.get_size()) {
 			throw runtime_error("Invalid level");
