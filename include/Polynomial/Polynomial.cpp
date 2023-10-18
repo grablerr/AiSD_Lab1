@@ -25,9 +25,9 @@ namespace polynomials {
 
 		Polynomial<T> operator+=(const Polynomial<T>& other);
 		Polynomial<T> operator+(const Polynomial<T>& other)const;
-		Polynomial<T> operator -= (const Polynomial<T>& other);
+		Polynomial<T> operator-=(const Polynomial<T>& other);
 		Polynomial<T> operator-(const Polynomial<T>& other)const;
-		Polynomial<T> operator*(const T num) const;
+		Polynomial<T> operator*(T num) const;
 		T& operator[](int level);
 		T operator[](int level) const;
 		bool operator==(Polynomial<T>& other) const;
@@ -37,12 +37,11 @@ namespace polynomials {
 		Polynomial<T>& operator=(Polynomial<T> other);
 		Polynomial<T>& expand(int level);
 		~Polynomial() = default;
-		const T coeff_at(int index) const;
 		friend std::ostream& operator<<(std::ostream& out, const Polynomial<T>& poly) {
 			int degree = poly._coefficients.get_size() - 1;
 
 			for (int i = degree; i >= 0; --i) {
-				T coeff = poly.coeff_at(i);
+				T coeff = poly[i];
 				if (i < degree) {
 					out << " + ";
 				}
@@ -55,6 +54,7 @@ namespace polynomials {
 			}
 			return out;
 		};
+
 	};
 
 	template<typename T>
@@ -141,28 +141,28 @@ namespace polynomials {
 	}
 
 	template<typename T>
-	Polynomial<T> Polynomial<T>::operator*(T skal) const {
-		int maxSize = std::max(_coefficients.get_size(), _coefficients.get_size());
+	Polynomial<T> Polynomial<T>::operator*(T scal) const {
+		int maxSize = _coefficients.get_size();
 		Polynomial<T> result(maxSize);
 
 		for (int i = 0; i < maxSize; ++i) {
 			T coeff1 = (i < _coefficients.get_size()) ? _coefficients[i] : 0;
 
-			result._coefficients[i] = coeff1 * skal;
+			result._coefficients[i] = coeff1 * scal;
 		}
 
 		return result;
 	}
 
 	template<typename T>
-	Polynomial<T> operator*(const T num, Polynomial<T>& poly) {
+	Polynomial<T> operator*(T scal, Polynomial<T>& poly) {
 		int maxSize = poly.get_coeffs().get_size();
 		Polynomial<T> result(maxSize);
 
 		for (int i = 0; i < maxSize; ++i) {
 			T coeff1 = (i < poly.get_coeffs().get_size()) ? poly.get_coeffs()[i] : 0;
 
-			result.get_coeffs()[i] = coeff1 * num;
+			result.get_coeffs()[i] = coeff1 * scal;
 		}
 
 		return result;
@@ -208,11 +208,6 @@ namespace polynomials {
 		}
 		_coefficients = result._coefficients;
 		return *this;
-	}
-
-	template<typename T>
-	const T Polynomial<T>::coeff_at(int index) const {
-		return _coefficients[index];
 	}
 
 	template<typename T>

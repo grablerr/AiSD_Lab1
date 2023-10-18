@@ -4,16 +4,9 @@ using namespace std;
 using namespace polynomials;
 
 int main() {
-	auto pol1 = Polynomial<complex<float>>(3);
 	auto pol2 = Polynomial<int>(3);
-	auto pol3 = Polynomial<float>(3);
-	complex<double> CN1(3.3f, 1.9f);
-	complex<double> CN2(4.6f, 2.7f);
-	complex<double> CN3(4.9f, 7.2f);
-
-	pol1[0] = CN1;
-	pol1[1] = CN2;
-	pol1[2] = CN3;
+	auto pol4 = Polynomial<int>(3);
+	auto pol3 = Polynomial<float>(5);
 
 	pol2[0] = 1;
 	pol2[1] = 2;
@@ -23,18 +16,28 @@ int main() {
 	pol3[1] = 2.2f;
 	pol3[2] = 3.2f;
 
-	cout<< "Complex<float> pol1 = " << pol1 << endl;
-	cout<< "Int pol2 = " << pol2 << endl;
-	cout << "Int pol2 *2 = " << pol2 * 2 << endl;
+	pol4[0] = 1;
+	pol4[1] = 3;
+	pol4[2] = 2;
+
+	cout << "Int pol2 = " << pol2 << endl;
+	cout << endl;
+	cout << "Compute in pol2 x = 5 : " << pol2.compute(5) << endl;
+	cout << "Int pol2 * 2 = " << pol2 * 2 << endl;
 	cout << "2 * Int pol2 = " << 2 * pol2 << endl;
+	cout << endl;
 	cout << "Float pol 3 = " << pol3 << endl;
-	cout << "2.5 * Int pol3 = " << 2.5f * pol3 << endl;
-
-	cout << root_search(pol1) << endl;
-
+	cout << "Shrinked pol3 = " << pol3.shrink_to_fit() << endl;
+	cout << "Setted pol3 = " << pol3.set(5.5f,100) << endl;
+	cout << endl;
+	cout << "Pol4 - " << pol4 << endl;
+	cout << "Roots in pol4 - " << root_search(pol4) << endl;
+	cout << endl;
+	cout << "Try to search roots in pol2 = " << pol2 << endl;
 	try {
 		cout << root_search(pol2) << endl;
 	}
-	catch (...) { cout << "No real roots"; }
+	catch (...) { cout << "No real roots in pol2"; }
+	cout << endl;
 }
 
